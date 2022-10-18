@@ -1,6 +1,6 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'northamerica-northeast1-docker.pkg.dev/stocks/ycng228/ycng_image_predictor', '.' ]
-images: ['northamerica-northeast1-docker.pkg.dev/stocks/ycng228/ycng_image_predictor']
+  args: [ 'build', '-t', 'northamerica-northeast1-docker.pkg.dev/stocks-365719/ycng228/ycng_image_predictor', '.' ]
+images: ['northamerica-northeast1-docker.pkg.dev/stocks-365719/ycng228/ycng_image_predictor']
 
 timeout: '1200s'
