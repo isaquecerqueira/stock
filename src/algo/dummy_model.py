@@ -1,25 +1,46 @@
 import logging
-
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LogisticRegression
 
 
-def create_features(df_stock, nlags=10):
-    df_resampled = df_stock.copy()
-    lags_col_names = []
-    for i in range(nlags + 1):
-        df_resampled['lags_' + str(i)] = df_resampled['close'].shift(i)
-        lags_col_names.append('lags_' + str(i))
-    df = df_resampled[lags_col_names]
-    print(df)
-    df = df.dropna(axis=0)
+def create_features(df_stock, nlags=5):
+    def tagger(row):
+        if row['next'] < row['lag_0']:
+            return 'Sell'
+        else:
+            return 'Buy'
 
-    return df
+    columns = [f'lag_{lag}' for lag in reversed(range(0, nlags))]
+    columns += ['out']
+
+    # lags
+    for lag in range(0, nlags):
+        df_stock[f'lag_{lag}'] = df_stock['close'].shift(lag)
+    df_stock['next'] = df_stock['close'].shift(-1)
+    df_stock['out'] = df_stock.apply(tagger, axis=1)
+    df_clean = df_stock[columns].dropna(axis=0)
+
+    # moving average
+    ma_day = [10, 20, 50]
+    for ma in ma_day:
+        column_name = f"MA_{ma}"
+        df_clean[column_name] = df_clean['lag_0'].rolling(ma).mean()
+
+    # month and weekday
+    df_clean['month'] = df_clean.index.month
+    df_clean['weekday'] = df_clean.index.weekday
+    df_clean = pd.concat([df_clean, pd.get_dummies(df_clean['month'], drop_first=True, prefix="month")], axis=1)
+    df_clean = pd.concat([df_clean, pd.get_dummies(df_clean['weekday'], drop_first=True, prefix="weekday")], axis=1)
+    df_clean.dropna(inplace=True)
+
+    return df_clean
 
 
 def create_X_Y(df_lags):
-    X = df_lags.drop('lags_0', axis=1)
-    Y = df_lags[['lags_0']]
+    df_lags = df_lags[df_lags.index < pd.to_datetime('06/01/2022')]
+    X = df_lags.drop('out', axis=1)
+    Y = df_lags[['out']]
     return X, Y
 
 
@@ -27,7 +48,7 @@ class Stock_model(BaseEstimator, TransformerMixin):
 
     def __init__(self, data_fetcher):
         self.log = logging.getLogger()
-        self.lr = LinearRegression()
+        self.lg = LogisticRegression()
         self._data_fetcher = data_fetcher
         self.log.warning('here')
 
@@ -35,7 +56,7 @@ class Stock_model(BaseEstimator, TransformerMixin):
         data = self._data_fetcher(X)
         df_features = create_features(data)
         df_features, Y = create_X_Y(df_features)
-        self.lr.fit(df_features, Y)
+        self.lg.fit(df_features, Y)
         return self
 
     def predict(self, X, Y=None):
@@ -45,6 +66,6 @@ class Stock_model(BaseEstimator, TransformerMixin):
         df_features = create_features(data)
         print(df_features)
         df_features, Y = create_X_Y(df_features)
-        predictions = self.lr.predict(df_features)
+        predictions = self.lg.predict(df_features)
 
         return predictions.flatten()[-1]
