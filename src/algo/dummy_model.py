@@ -2,6 +2,7 @@ import logging
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 
 
 def create_features(df_stock, nlags=5):
@@ -41,6 +42,8 @@ def create_X_Y(df_lags):
     df_lags = df_lags[df_lags.index < pd.to_datetime('06/01/2022')]
     X = df_lags.drop('out', axis=1)
     Y = df_lags[['out']]
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
     return X, Y
 
 
