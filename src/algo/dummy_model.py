@@ -1,5 +1,6 @@
 import logging
 import pandas as pd
+import random
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
@@ -43,6 +44,7 @@ def create_features(df_stock, nlags=10):
     return df_clean
 
 def create_X_Y(df_lags):
+    df_lags = df_lags.iloc[:-1 , :]
     X = df_lags.drop('out', axis=1)
     Y = df_lags[['out']]
     scaler = StandardScaler()
