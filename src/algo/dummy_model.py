@@ -1,7 +1,8 @@
 import logging
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+#from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
 
@@ -51,7 +52,7 @@ class Stock_model(BaseEstimator, TransformerMixin):
 
     def __init__(self, data_fetcher):
         self.log = logging.getLogger()
-        self.lg = LogisticRegression()
+        self.lg = RandomForestClassifier(max_depth=5, random_state=0)
         self._data_fetcher = data_fetcher
         self.log.warning('here')
 
