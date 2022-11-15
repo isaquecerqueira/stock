@@ -39,7 +39,7 @@ def create_features(df_stock, nlags=5):
 
 
 def create_X_Y(df_lags):
-    df_lags = df_lags[df_lags.index < pd.to_datetime('06/01/2022')]
+    #df_lags = df_lags[df_lags.index < pd.to_datetime('06/01/2022')]
     X = df_lags.drop('out', axis=1)
     Y = df_lags[['out']]
     scaler = StandardScaler()
