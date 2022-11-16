@@ -27,7 +27,7 @@ def create_features(df_stock, nlags=5):
     # Add time features
     df_time = pd.DataFrame(index=df_clean.index)
     df_time['day_of_year'] = pd.to_datetime(df_clean.index)
-    rbf = RepeatingBasisFunction(n_periods=12, column= 'day_of_year', remainder="drop")
+    rbf = RepeatingBasisFunction(n_periods=12, column= 'day_of_year', input_range=(1,365), remainder="drop")
     rbf.fit(df_time)
     df_time = pd.DataFrame(index=df_clean.index, data=rbf.transform(df_time))  
     df_clean = pd.merge(df_clean, df_time, left_index=True, right_index=True)
