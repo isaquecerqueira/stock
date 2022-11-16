@@ -2,6 +2,7 @@ import logging
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.ensemble import RandomForestClassifier
+from sklego.preprocessing import RepeatingBasisFunction
 #from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
@@ -28,12 +29,25 @@ def create_features(df_stock, nlags=5):
     for ma in ma_day:
         column_name = f"MA_{ma}"
         df_clean[column_name] = df_clean['lag_0'].rolling(ma).mean()
-
+    df_clean.dropna(inplace=True)
+    
     # month and weekday
-    df_clean['month'] = df_clean.index.month
-    df_clean['weekday'] = df_clean.index.weekday
-    df_clean = pd.concat([df_clean, pd.get_dummies(df_clean['month'], drop_first=True, prefix="month")], axis=1)
-    df_clean = pd.concat([df_clean, pd.get_dummies(df_clean['weekday'], drop_first=True, prefix="weekday")], axis=1)
+    #df_clean['month'] = df_clean.index.month
+    #df_clean['weekday'] = df_clean.index.weekday
+    #df_clean = pd.concat([df_clean, pd.get_dummies(df_clean['month'], drop_first=True, prefix="month")], axis=1)
+    #df_clean = pd.concat([df_clean, pd.get_dummies(df_clean['weekday'], drop_first=True, prefix="weekday")], axis=1)
+    #df_clean.dropna(inplace=True)
+    # Add time features
+    df_time = pd.DataFrame(index=df_clean.index)
+    df_time['day_of_year'] = pd.to_datetime(df_clean.index)
+    rbf = RepeatingBasisFunction(n_periods=12,
+                              column= 'day_of_year',
+    #                         	input_range=(1,365),
+                              remainder="drop")
+    rbf.fit(df_time)
+    df_time = pd.DataFrame(index=df_clean.index,
+                    data=rbf.transform(df_time))  
+    df_clean = pd.merge(df_clean, df_time, left_index=True, right_index=True)
     df_clean.dropna(inplace=True)
 
     return df_clean
